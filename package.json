@@ -4,7 +4,7 @@
   "description": "",
   "main": "confirmreference.js",
   "scripts": {
-    "start": "node api/server/server.js",
+    "start": "node server/server.js",
     "test": "mocha server/**/*.test.js",
     "test-watch": "nodemon --exec 'npm test'"
   },
