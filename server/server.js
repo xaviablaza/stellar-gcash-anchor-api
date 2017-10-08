@@ -1,10 +1,10 @@
-var express = require('express');
-var bodyParser = require('body-parser');
+const _ = require('lodash');
+const express = require('express');
+const bodyParser = require('body-parser');
+const {ObjectID} = require('mongodb');
 
 var {mongoose} = require('./db/mongoose');
 var {Deposit} = require('./models/deposit');
-
-var {ObjectID} = require('mongodb');
 
 var app = express();
 const port = process.env.PORT || 3000;
@@ -48,6 +48,26 @@ app.get('/deposits/:id', (req, res) => {
         }
         res.send({deposit});
     }, (e) => {
+        res.status(400).send();
+    });
+});
+
+app.patch('/deposits/:id', (req, res) => {
+    var id = req.params.id;
+    var body = _.pick(req.body, ['referenceNumber']);
+
+    if (!ObjectID.isValid(id)) {
+        return res.status(404).send();
+    }
+
+    // Check if there has been an confirmation sent by the user
+
+    Deposit.findByIdAndUpdate(id, {$set: body}, {new: true}).then((deposit) => {
+       if (!deposit) {
+           return res.status(404).send();
+       }
+       res.send({deposit})
+    }).catch((e) => {
         res.status(400).send();
     });
 });
