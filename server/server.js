@@ -109,7 +109,8 @@ app.get('/getaddress', (req, res) => {
 });
 
 app.post('/gcashsms', (req, res) => {
-    console.log(req.body);
+    console.log(req);
+    res.send();
 });
 
 app.listen(port, () => {
