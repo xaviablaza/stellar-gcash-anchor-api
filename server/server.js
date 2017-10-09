@@ -4,9 +4,13 @@ const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
+const StellarSdk = require('stellar-sdk');
+StellarSdk.Network.useTestNetwork();
+var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 
 var {mongoose} = require('./db/mongoose');
 var {Deposit} = require('./models/deposit');
+var {GCashAccount} = require('./models/gcashaccount');
 
 var app = express();
 const port = process.env.PORT || 3000;
@@ -63,7 +67,6 @@ app.patch('/deposits/:id', (req, res) => {
     }
 
     // Check if there has been an confirmation sent by the user
-
     Deposit.findByIdAndUpdate(id, {$set: body}, {new: true}).then((deposit) => {
        if (!deposit) {
            return res.status(404).send();
@@ -71,6 +74,35 @@ app.patch('/deposits/:id', (req, res) => {
        res.send({deposit})
     }).catch((e) => {
         res.status(400).send();
+    });
+});
+
+app.get('/getaddress', (req, res) => {
+    var body = _.pick(req.body, ['address', 'phone', 'memo_type', 'memo']);
+    var phpCode = 'PHP';
+    var phpIssuer = 'GAD4Z7VDXJ3ZUGXZ7B6OVQBQCMWNQZROT3VABPAZXLNNIBVMJLEPR7XR';
+    server.loadAccount(body.address).then((account) => {
+        var trusted = account.balances.some((balance) => {
+            return balance.asset_code === phpCode &&
+                balance.asset_issuer === phpIssuer;
+        });
+        if (!trusted) {
+            return res.status(400).send();
+        }
+
+        var gcashaccount = new GCashAccount({
+            phone: body.phone,
+            address: body.address
+        });
+
+        gcashaccount.save().then(() => {
+            // TODO: Could send a QR code address or phone number per depositor
+            res.send({depositAddress: '09178838668'});
+        }, (err) => {
+            res
+                .status(400)
+                .send(err);
+        });
     });
 });
 

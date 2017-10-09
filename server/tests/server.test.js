@@ -4,6 +4,7 @@ const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Deposit} = require('./../models/deposit');
+const {GCashAccount} = require('./../models/gcashaccount');
 
 const deposits = [{
     _id: new ObjectID(),
@@ -20,7 +21,8 @@ const deposits = [{
 beforeEach((done) => {
     Deposit.remove({}).then(() => {
         return Deposit.insertMany(deposits);
-    }).then(() => done());
+    });
+    GCashAccount.remove({}).then(() => done());
 });
 
 describe('POST /deposits', () => {
@@ -127,5 +129,32 @@ describe('PATCH /deposits/:id', () => {
                 expect(typeof(res.body.deposit.referenceNumber)).toEqual('number');
             })
             .end(done);
+    });
+});
+
+describe('GET /getaddress', () => {
+    it('should get an address for deposit', (done) => {
+        var address = 'GA5GG6LSG5F3PNWQ6FHRF5OWTIQWQJVWERXSOA7UFTLJC2BREGRANDZC';
+        var phone = '09178348991';
+        var depositAddress = '09178838668';
+        request(app)
+            .get('/getaddress')
+            .send({address, phone})
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.depositAddress).toBe(depositAddress);
+            })
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+
+                GCashAccount.find({address, phone}).then((gcashaccounts) => {
+                    expect(gcashaccounts.length).toBe(1);
+                    expect(gcashaccounts[0].address).toBe(address);
+                    expect(gcashaccounts[0].phone).toBe(phone);
+                    done();
+                }).catch((e) => done(e));
+            });
     });
 });
