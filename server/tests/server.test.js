@@ -111,3 +111,21 @@ describe('GET /deposits/:id', () => {
            .end(done);
    });
 });
+
+describe('PATCH /deposits/:id', () => {
+    it('should update the deposit', (done) => {
+        var referenceNumber = 251718267;
+
+        request(app)
+            .patch(`/deposits/${deposits[0]._id}`)
+            .send({
+                referenceNumber
+            })
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.deposit.referenceNumber).toBe(referenceNumber);
+                expect(typeof(res.body.deposit.referenceNumber)).toEqual('number');
+            })
+            .end(done);
+    });
+});
