@@ -103,6 +103,8 @@ app.get('/getaddress', (req, res) => {
                 .status(400)
                 .send(err);
         });
+    }).catch((e) => {
+        res.status(400).send();
     });
 });
 
