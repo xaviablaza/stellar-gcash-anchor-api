@@ -108,6 +108,10 @@ app.get('/getaddress', (req, res) => {
     });
 });
 
+app.post('/gcashsms', (req, res) => {
+    console.log(req.body);
+});
+
 app.listen(port, () => {
     console.log(`Started on port ${port}`);
 });
