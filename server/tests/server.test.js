@@ -5,6 +5,7 @@ const {ObjectID} = require('mongodb');
 const {app} = require('./../server');
 const {Deposit} = require('./../models/deposit');
 const {GCashAccount} = require('./../models/gcashaccount');
+const {GCashSms} = require('./../models/gcashsms');
 
 const deposits = [{
     _id: new ObjectID(),
@@ -22,14 +23,15 @@ beforeEach((done) => {
     Deposit.remove({}).then(() => {
         return Deposit.insertMany(deposits);
     });
-    GCashAccount.remove({}).then(() => done());
+    GCashAccount.remove({});
+    GCashSms.remove({}).then(() => done());
 });
 
 describe('POST /deposits', () => {
     it('should create a new deposit', (done) => {
-       var phone = '09178838668';
-       var amount = 2000.00;
-       var currency = 'GCASH';
+       let phone = '09178838668';
+       let amount = 2000.00;
+       let currency = 'GCASH';
 
        request(app)
            .post('/deposits')
@@ -116,7 +118,7 @@ describe('GET /deposits/:id', () => {
 
 describe('PATCH /deposits/:id', () => {
     it('should update the deposit', (done) => {
-        var referenceNumber = 251718267;
+        let referenceNumber = 251718267;
 
         request(app)
             .patch(`/deposits/${deposits[0]._id}`)
@@ -134,9 +136,9 @@ describe('PATCH /deposits/:id', () => {
 
 describe('GET /getaddress', () => {
     it('should get an address for deposit', (done) => {
-        var address = 'GA5GG6LSG5F3PNWQ6FHRF5OWTIQWQJVWERXSOA7UFTLJC2BREGRANDZC';
-        var phone = '09178348991';
-        var depositAddress = '09178838668';
+        let address = 'GA5GG6LSG5F3PNWQ6FHRF5OWTIQWQJVWERXSOA7UFTLJC2BREGRANDZC';
+        let phone = '09178348991';
+        let depositAddress = '09178838668';
         request(app)
             .get('/getaddress')
             .send({address, phone})
@@ -153,6 +155,38 @@ describe('GET /getaddress', () => {
                     expect(gcashaccounts.length).toBe(1);
                     expect(gcashaccounts[0].address).toBe(address);
                     expect(gcashaccounts[0].phone).toBe(phone);
+                    done();
+                }).catch((e) => done(e));
+            });
+    });
+});
+
+describe('POST /gcashsms', () => {
+    it('should create a new sms entry', (done) => {
+        let device_id = '66301';
+        let message = 'You have received P500.00 of GCash from XAVIER LUIS ABLAZA. Your new balance is P500.00 09-20-17 07:49AM Ref. No. 238741559.';
+        let sender = '2882';
+        let secret = 'thisisasecret';
+        request(app)
+            .post('/gcashsms')
+            .send({device_id, message, sender, secret})
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.device_id).toBe(device_id);
+                expect(res.body.message).toBe(message);
+                expect(res.body.sender).toBe(sender);
+                expect(res.body.secret).toBe(secret);
+            })
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+                GCashSms.find({device_id, message, sender, secret}).then((smsentries) => {
+                    expect(smsentries.length).toBe(1);
+                    expect(smsentries[0].device_id).toBe(device_id);
+                    expect(smsentries[0].message).toBe(message);
+                    expect(smsentries[0].sender).toBe(sender);
+                    expect(smsentries[0].secret).toBe(secret);
                     done();
                 }).catch((e) => done(e));
             });
