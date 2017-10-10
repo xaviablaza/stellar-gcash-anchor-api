@@ -23,8 +23,11 @@ beforeEach((done) => {
     Deposit.remove({}).then(() => {
         return Deposit.insertMany(deposits);
     });
-    GCashAccount.remove({});
-    GCashSms.remove({}).then(() => done());
+    GCashAccount.remove({}).then(() => {
+        GCashSms.remove({}).then(() => {
+            done();
+        })
+    });
 });
 
 describe('POST /deposits', () => {
@@ -190,5 +193,24 @@ describe('POST /gcashsms', () => {
                     done();
                 }).catch((e) => done(e));
             });
+    });
+
+    let sms = '1/2 You have received P1,439.01 of GCash from MARIE MARGARET PASCUAL. Your new balance is P5,390.45 09-29-17 07:49 AM Ref. No. 238741554. Use now to buy load,'
+    it('should get the reference number from regular expression', (done) => {
+        let regex = /Ref\. No\. \d{9}/;
+        expect(sms.match(regex)[0]).toEqual("Ref. No. 238741554");
+        done();
+    });
+
+    it('should get the amount of GCash deposited from regular expression', (done) => {
+        let regex = /P.+ of GCash/;
+        expect(sms.match(regex)[0]).toEqual("P1,439.01 of GCash");
+        done();
+    });
+
+    it('should get the date and time of the deposit', (done) => {
+        let regex = /\d\d-\d\d-\d\d \d\d:\d\d [AP]M/;
+        expect(sms.match(regex)[0]).toEqual("09-29-17 07:49 AM");
+        done();
     });
 });
