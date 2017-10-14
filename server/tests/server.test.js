@@ -170,6 +170,8 @@ describe('POST /gcashsms', () => {
         let message = 'You have received P500.00 of GCash from XAVIER LUIS ABLAZA. Your new balance is P500.00 09-20-17 07:49AM Ref. No. 238741559.';
         let sender = '2882';
         let secret = 'thisisasecret';
+        let amount = 500.00;
+        let referenceNumber = 238741559;
         request(app)
             .post('/gcashsms')
             .send({device_id, message, sender, secret})
@@ -190,6 +192,8 @@ describe('POST /gcashsms', () => {
                     expect(smsentries[0].message).toBe(message);
                     expect(smsentries[0].sender).toBe(sender);
                     expect(smsentries[0].secret).toBe(secret);
+                    expect(smsentries[0].amount).toBe(amount);
+                    expect(smsentries[0].referenceNumber).toBe(referenceNumber);
                     done();
                 }).catch((e) => done(e));
             });
@@ -198,13 +202,20 @@ describe('POST /gcashsms', () => {
     let sms = '1/2 You have received P1,439.01 of GCash from MARIE MARGARET PASCUAL. Your new balance is P5,390.45 09-29-17 07:49 AM Ref. No. 238741554. Use now to buy load,'
     it('should get the reference number from regular expression', (done) => {
         let regex = /Ref\. No\. \d{9}/;
-        expect(sms.match(regex)[0]).toEqual("Ref. No. 238741554");
+        let refnum = sms.match(regex)[0];
+        expect(refnum).toEqual("Ref. No. 238741554");
+        expect(refnum.substring(9)).toEqual("238741554");
         done();
     });
 
     it('should get the amount of GCash deposited from regular expression', (done) => {
         let regex = /P.+ of GCash/;
-        expect(sms.match(regex)[0]).toEqual("P1,439.01 of GCash");
+        let refnum = sms.match(regex)[0];
+        expect(refnum).toEqual("P1,439.01 of GCash");
+        refnum = refnum.substring(1,refnum.length-9);
+        expect(refnum).toEqual("1,439.01");
+        refnum = parseFloat(refnum.replace(/,/g, ''));
+        expect(refnum).toBe(1439.01);
         done();
     });
 

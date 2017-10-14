@@ -109,13 +109,19 @@ app.get('/getaddress', (req, res) => {
     });
 });
 
+// The sms should be the representation of a deposit, with the unique reference number serving as the ID
 app.post('/gcashsms', (req, res) => {
     let body = _.pick(req.body, ['device_id', 'message', 'sender', 'secret']);
+    let refnum = body.message.match(/P.+ of GCash/)[0]
+    let amount = parseFloat(refnum.substring(1,refnum.length-9).replace(/,/g, ''));
+    let referenceNumber = body.message.match(/Ref\. No\. \d{9}/)[0].substring(9);
     let gcashsms = new GCashSms({
         device_id: body.device_id,
         message: body.message,
         sender: body.sender,
-        secret: body.secret
+        secret: body.secret,
+        amount,
+        referenceNumber
     });
     gcashsms.save().then((doc) => {
         res.send(doc);

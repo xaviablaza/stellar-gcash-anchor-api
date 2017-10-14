@@ -17,7 +17,15 @@ var GCashSms = mongoose.model('GCashSms', {
     secret: {
         type: String,
         required: true
-    }
+    },
+    amount: {
+        type: Number,
+        required: true
+    },
+    referenceNumber: {
+        type: Number,
+        default: null
+    },
 
 });
 

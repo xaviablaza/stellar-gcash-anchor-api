@@ -21,6 +21,8 @@ var Deposit = mongoose.model('Deposit', {
         maxlength: 12
     },
 
+    // time Received
+
     // Upon receiving the deposit, reference number is generated and updated in this document
     referenceNumber: {
         type: Number,
